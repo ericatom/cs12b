@@ -1,0 +1,41 @@
+pa4 notes:
+finish time = start time + duration
+wait time = finish time - arrival time - duration
+if more processors than jobs, wait time = 0
+m = jobs n = processors
+array of n processors
+jobs will be assigned to processor with shortest line
+if there are more than one processor with short line, jobs are assigned to n with smallest index
+program will take one command line argument taking in an input file name and writing to two output files
+-both output files will be the same name of the input file but with .rpt and .trc
+job = (arrival, duration, finish)
+
+goal of program:
+determine total wait time
+maximum wait time
+average wait time
+
+pseudocode from MSI:
+✓1. read in first line of text file and make an array with that size 
+✓2. assign all arrivals/departures to spot 0 in array
+✓3. 1st loop iterates through # of processors (numP)
+✓	-for loop inside that iterates through time
+  -need to check every iteration to make sure queue[0] the length = m and 1st item has a finish time (use peak)
+  -iterate through queue[0] until arrival time != current time
+  -before you schedule jobs, you need to check to make sure jobs aren't finishing at same time
+  	-need to do this b/c length of lines can change after finishing jobs so want to schedule jobs in shortest line
+    -every node in front of line check to see if finish time is undefined then define it
+    -see if job's finish time == current time
+    -loop would be 1 to numP and use peek()
+    -finish job
+4. finishing a job
+	-calculate wait time and see if it's greater than max wait time
+  	-if it's > max wait time, set max wait time to new time
+  -dequeue the node and place it in queue zero
+5. iterate through queue[0]until arrival time != current time(keep scheduling jobs until no more jobs at that time)
+	-if it does equal current time, schedule the job
+6. scheduling a job
+	-iterate through queues and find one with the smallest length
+  -dequeue from 0 and place into smallest queue 
+7. print wait time for numP processor
+8. for reseting the program to change number of processors, empty queue 0 and reread jobs from input file
