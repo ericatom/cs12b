@@ -1,0 +1,196 @@
+//Simulation.java
+//Erica Tom
+//edtom
+//pa4
+//May 13 2016
+//Implements Queue and Job to simulate jobs arrival duration and finish times
+
+
+
+import java.io.*;
+import java.util.Scanner;
+
+public class Simulation {
+	public static void main(String[] args) throws IOException {
+
+		/* Initializing Variables*/
+		Scanner sc = null;
+		PrintWriter report = null;
+		PrintWriter trace = null;
+		Queue StorageExtra = new Queue();
+		Queue Storage = new Queue();
+		Queue finished = new Queue();
+		Queue[] processorQueues = null;
+		int m = 0;                           //number of jobs
+		Job j = null;
+		int time = 0;   
+
+        /*check arg length before entering job simulation*/
+		try { 
+			if (args.length != 1) {
+				System.out.println("Usage: Simulation infile");
+				System.exit(1);
+			}
+
+			sc = new Scanner(new File(args[0]));
+			report = new PrintWriter(new FileWriter(args[0] + ".rpt"));
+			trace = new PrintWriter(new FileWriter(args[0] + ".trc"));
+		} catch(FileNotFoundException e) {
+			System.out.println("Caught Exception " + e);
+			System.exit(1);
+		}
+
+		m = numOfJobs(sc);
+
+		while(sc.hasNextLine()) {
+			j = getJob(sc);
+			StorageExtra.enqueue(j);
+		}
+
+        /*outputs for trace and report files */
+		trace.println("Trace file: " + (args[0] + ".trc"));
+		trace.println(m + " Jobs:");
+		trace.println(StorageExtra.toString());
+		trace.println();
+
+		report.println("Report file: " + (args[0] + ".rpt"));
+		report.println(m + " Jobs:");
+		report.println(StorageExtra.toString());
+		report.println();
+		report.println("***********************************************************");
+         
+        /* creates m-1 processors*/
+		for(int n = 1; n < m; n++) { 
+			int totalWait = 0;
+			int maxWait = 0;
+			double averageWait = 0.0;
+
+			for(int i = 1; i < StorageExtra.length()+1; i++) {
+				j = (Job)StorageExtra.dequeue();
+				j.resetFinishTime();
+				Storage.enqueue(j);
+				StorageExtra.enqueue(j);
+			}
+
+            /*starts process of assigning queues*/
+			int processors = n;
+			processorQueues = new Queue[n+2];
+			processorQueues[0] = Storage;
+			processorQueues[n+1] = finished;
+			for(int j = 1; j < n+1; j++) {
+				processorQueues[j] = new Queue();
+			}
+
+			trace.println("*****************************");
+			if(processors == 1)
+				trace.println(processors + " processor:");
+			else
+				trace.println(processors + " processors:");
+			trace.println("*****************************");
+
+			trace.println("time=" + time);
+			trace.println("0: " + Storage.toString());
+			for(int k = 1; k < processors+1; k++) {
+				trace.println(k + ": " + processorQueues[k]);
+			}
+            
+            /*assigns jobs as long as they are in index 0 */
+			while(finished.length() != m) {
+				int compFinal = Integer.MAX_VALUE;
+				int finalIndex = 1;
+				int comp = -1;
+				int length = -1;
+				int finalLength = -1;
+				Job compare = null;
+
+				/* Checks arrival time and compares to current time*/
+				if (!Storage.isEmpty()) {
+					compare = (Job)Storage.peek();
+					compFinal = compare.getArrival();
+					finalIndex = 0;
+				}
+
+				for(int p = 1; p < processors+1; p++) {
+					if (processorQueues[p].length() != 0) {
+						compare = (Job)processorQueues[p].peek();
+						comp = compare.getFinish();
+					}
+					if (comp == -1) {
+					} else if (comp < compFinal) {
+						compFinal = comp;
+						finalIndex = p;
+					}
+					time = compFinal;
+				}
+
+				if (finalIndex == 0) {
+					int tempIndex = 1;
+					finalLength = processorQueues[tempIndex].length();
+					for (int q = 1; q < processors+1; q++) {
+						length = processorQueues[q].length();
+						if (length < finalLength) {
+							finalLength = length;
+							tempIndex = q;
+						}
+					}
+
+					compare = (Job)Storage.dequeue();
+					processorQueues[tempIndex].enqueue(compare);
+					if (processorQueues[tempIndex].length() == 1) {
+						compare = (Job)processorQueues[tempIndex].peek();
+						compare.computeFinishTime(time);
+					}
+				} else {
+					compare = (Job)processorQueues[finalIndex].dequeue();
+					finished.enqueue(compare);
+					int tempWait = compare.getWaitTime();
+					if (tempWait > maxWait)
+						maxWait = tempWait;
+					totalWait += tempWait;
+
+					if (processorQueues[finalIndex].length() >= 1) {
+						compare = (Job)processorQueues[finalIndex].peek();
+						compare.computeFinishTime(time);
+					}
+				}
+
+				trace.println();
+				trace.println("time=" + time);
+				trace.println("0: " + Storage.toString());
+				for(int r = 1; r < processors+1; r++)
+					trace.println(r + ": " + processorQueues[r]);
+			}
+
+			averageWait = ((double)totalWait/m);
+			averageWait = (double)Math.round(averageWait*100)/100;
+			trace.println();
+			if (processors == 1)
+				report.println(processors + " processor: totalWait=" + totalWait + ", maxWait=" + maxWait + ", averageWait=" + averageWait);
+			else
+				report.println(processors + " processors: totalWait=" + totalWait + ", maxWait=" + maxWait + ", averageWait=" + averageWait);
+
+			time = 0;
+			finished.dequeueAll();
+		}
+
+		sc.close();
+		report.close();
+		trace.close();
+
+	}
+
+    /*scans input file for pairs of numbers = arrival,duration*/
+	public static Job getJob(Scanner in) { 
+		String[] s = in.nextLine().split(" ");
+		int a = Integer.parseInt(s[0]);
+		int d = Integer.parseInt(s[1]);
+		return new Job(a, d);
+	}
+
+	/*intakes a line and turns string into int*/
+	public static int numOfJobs(Scanner sc) { 
+		String s = sc.nextLine();
+		int x = Integer.parseInt(s);
+		return x;
+	}
+}
