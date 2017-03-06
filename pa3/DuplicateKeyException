@@ -1,0 +1,12 @@
+//DuplicateKeyException.java
+//Erica Tom
+//edtom
+//pa3
+//April 25 2016
+//Exception that gets thrown if user tries to insert a key value into existing one
+
+public class DuplicateKeyException extends RuntimeException{
+   public DuplicateKeyException(String s){
+      super(s);
+   }
+}
