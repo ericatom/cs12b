@@ -1,0 +1,12 @@
+//KeyNotFoundException.java
+//Erica Tom
+//edtom
+//pa3
+//April 25 2016
+//Excpetion that gets thrown if user tries to delete a non existant key
+
+public class KeyNotFoundException extends RuntimeException{
+        public KeyNotFoundException(String s) {
+                super(s);
+        }
+}
